@@ -127,6 +127,7 @@ class Database:
         print(f'Writing text backup for database "{self.path}".')
         with open(self.backup_path, 'w') as f:
             json.dump(data, f, indent=2)
+            f.write('\n')
 
     def maybe_save_backup(self):
         if self.recovered:
