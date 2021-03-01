@@ -1,0 +1,7 @@
+# IDE stuff
+tags
+*.un~
+.idea
+
+# Python stuff
+__pycache__
