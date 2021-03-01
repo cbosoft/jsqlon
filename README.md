@@ -12,6 +12,7 @@ cd jsqlon && pip install .
 
 # Use
 
+Use the context manager to sync `json` and `SQLite` databases seamlessly:
 ```python
 from jsqlon import Database
 
@@ -22,6 +23,7 @@ for result in results:
     print(result['ID'])
 ```
 
+Pass a factory callable to control the query results:
 ```python
 from jsqlon import Database
 
@@ -37,3 +39,7 @@ if __name__ == '__main__':
     for result in results:
         print(result[0])
 ```
+
+# Known Issues
+
+- [ ] Unnecessarily syncs `SQLite` to `json` after restore from `json`.
