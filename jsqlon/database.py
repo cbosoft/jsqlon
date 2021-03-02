@@ -94,7 +94,8 @@ class Database:
         create_re = re.compile(r'^CREATE TABLE (\w+) \((.*)\);?$')
         for sql in sources:
             sql = ' '.join(sql.split('\n'))
-            if m := create_re.match(sql):
+            m = create_re.match(sql)
+            if m:
                 name, column_data = m.groups()
                 column_data = [c.strip() for c in column_data.split(',')]
                 columns = dict()
