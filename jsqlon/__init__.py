@@ -1,1 +1,1 @@
-from .database import Database
+from .database import Database, Like, LessThan, GreaterThan

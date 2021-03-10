@@ -20,6 +20,18 @@ class NoResults(DatabaseError):
     '''Raised when no results are returned.'''
 
 
+class Like(str):
+    pass
+
+
+class GreaterThan(int):
+    pass
+
+
+class LessThan(int):
+    pass
+
+
 class Database:
 
     def __init__(self, path: str = '../data/data.db', dummy=False):
@@ -117,9 +129,12 @@ class Database:
 
         # read from each table the values of all rows
         for table, tabledata in data.items():
-            rows = self.query(f'SELECT * FROM {table};', factory=sqlite3.Row)
-            rows = [dict(row) for row in rows]
-            data[table]['rows'] = rows
+            try:
+                rows = self.query(f'SELECT * FROM {table};', factory=sqlite3.Row)
+                rows = [dict(row) for row in rows]
+                data[table]['rows'] = rows
+            except NoResults:
+                data[table]['rows'] = []
 
         return data
 
@@ -176,6 +191,45 @@ class Database:
                                 print(cmnd)
                                 raise
                         cur.execute('END TRANSACTION;')
+
+    def ez_query(self, Table, factory=None, **kwargs):
+        query = f'SELECT * FROM {Table}'
+        conditions = []
+
+        for column, condition in kwargs.items():
+            if condition is None:
+                pass
+            elif isinstance(condition, Like):
+                conditions.append(f'{column} LIKE "{condition}"')
+            elif isinstance(condition, str):
+                conditions.append(f'{column} = "{condition}"')
+            elif isinstance(condition, LessThan):
+                conditions.append(f'{column} < {condition}')
+            elif isinstance(condition, GreaterThan):
+                conditions.append(f'{column} > {condition}')
+            elif isinstance(condition, int):
+                conditions.append(f'{column} = {condition}')
+            elif isinstance(condition, (slice, range)):
+                lb, ub = condition.start, condition.stop
+                conditions.append(f'{column} >= {lb}')
+                conditions.append(f'{column} < {ub}')
+            else:
+                raise NotImplementedError(f'Unhandled condition type {type(condition)}')
+
+        if conditions:
+            condition = ' AND '.join(conditions)
+            query += ' WHERE '
+            query += condition
+
+        query += ';'
+        kws = {}
+        if factory is not None:
+            kws['factory'] = factory
+        return self.query(query, **kws)
+
+    def insert(self, table: str, data: dict):
+        statement = self.insert_statement_from_data(table, data)
+        self.execute_sql(statement)
 
     def create_statement_from_data(self, *, name: str, columns: dict, **kwargs) -> str:
         cols = [self.column_spec_from_data(name=n, **spec) for n, spec in columns.items()]
